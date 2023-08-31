@@ -1,14 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Mathematics;
-using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
 
-public class Boid : MonoBehaviour
+public class Boid2 : MonoBehaviour
 {
     private Rigidbody2D _rb;
     private TrailRenderer _tr;
+    [NonSerialized] public BoidManager2 bm;
     [SerializeField] private float _speed;
     [NonSerialized] public Vector2 screenSize;
     [SerializeField] private float _minDistance, _maxDistance;
@@ -18,7 +17,7 @@ public class Boid : MonoBehaviour
     [SerializeField] private bool _cActive, _sActive, _aActive;
 
     private Vector2 _newVelocity = Vector2.zero;
-
+    
     private void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
@@ -31,7 +30,7 @@ public class Boid : MonoBehaviour
         StayInBounds();
         ApplyRules();
     }
-
+    
     void ApplyRules()
     {
         PopulateLists();
@@ -40,22 +39,12 @@ public class Boid : MonoBehaviour
 
         CalculateVelocity(cVector, sVector);
     }
-
+    
     void PopulateLists()
     {
-        _withinMax.Clear();
-        var maxCollider2Ds= Physics2D.OverlapCircleAll(transform.position, _maxDistance);
-        foreach (var collider in maxCollider2Ds)
-        {
-            _withinMax.Add(collider.gameObject);
-        }
+        _withinMax = bm.FindGameObjectsInRange(_maxDistance, transform.position, gameObject);
+        _withinMin = bm.FindGameObjectsInRange(_minDistance, transform.position, gameObject);
         
-        _withinMin.Clear();
-        var minCollider2Ds= Physics2D.OverlapCircleAll(transform.position, _maxDistance);
-        foreach (var collider in minCollider2Ds)
-        {
-            _withinMin.Add(collider.gameObject);
-        }
     }
 
     Vector2 Cohesion()
