@@ -268,5 +268,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _screenSize: {x: 17.8, y: 10}
-  _numBoids: 80
+  _numBoids: 300
   _boid: {fileID: 1874051390352264335, guid: 7cbbe1166f9e85f43a5346f1a2eaf43e, type: 3}

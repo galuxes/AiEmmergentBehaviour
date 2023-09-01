@@ -1,14 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Boid2 : MonoBehaviour
 {
     private Rigidbody2D _rb;
-    private TrailRenderer _tr;
     [NonSerialized] public BoidManager2 bm;
-    [SerializeField] private float _speed;
+    [SerializeField] private float _speed, _maxSpeed, _edgeForce;
     [NonSerialized] public Vector2 screenSize;
     [SerializeField] private float _minDistance, _maxDistance;
     private List<GameObject> _withinMin = new List<GameObject>(), _withinMax = new List<GameObject>();
@@ -16,19 +16,19 @@ public class Boid2 : MonoBehaviour
     [SerializeField] private float _cWeight, _sWeight, _aWeight;
     [SerializeField] private bool _cActive, _sActive, _aActive;
 
-    private Vector2 _newVelocity = Vector2.zero;
+    [SerializeField] private Vector2 _newVelocity = Vector2.zero, _edgeVelocity = Vector2.zero;
+
+    private bool _inBounds;
     
     private void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
-        _tr = GetComponent<TrailRenderer>();
     }
 
     private void Update()
     {
-        _tr.emitting = true;
-        StayInBounds();
         ApplyRules();
+        StayInBounds();
     }
     
     void ApplyRules()
@@ -44,29 +44,21 @@ public class Boid2 : MonoBehaviour
     {
         _withinMax = bm.FindGameObjectsInRange(_maxDistance, transform.position, gameObject);
         _withinMin = bm.FindGameObjectsInRange(_minDistance, transform.position, gameObject);
-        
     }
 
     Vector2 Cohesion()
     {
         Vector3 centerMass = Vector3.zero;
-        foreach (var obj in _withinMax)
+        
+        if (_withinMax.Count > 0)
         {
-            centerMass += obj.transform.position;
-        }
-
-        centerMass /= _withinMax.Count;
-
-        Vector2 direction = centerMass - transform.position;
-
-        if ( direction.magnitude <= _maxDistance)
-        {
+            centerMass = _withinMax.Aggregate(centerMass, (current, obj) => current + obj.transform.position);
+            Vector2 direction = centerMass - transform.position;
+        
             return direction / _maxDistance;
         }
-        else
-        {
-            return Vector2.zero;
-        }
+
+        return Vector2.zero;
     }
 
     Vector2 Separation()
@@ -82,41 +74,55 @@ public class Boid2 : MonoBehaviour
     void StayInBounds()
     {
         var pos = transform.position;
+        _inBounds = true;
+        
         if (pos.x > screenSize.x/2)
         {
-            _tr.emitting = false;
-            transform.position = new Vector2(screenSize.x / 2 * -1, pos.y);
+            _edgeVelocity += Vector2.left * (_edgeForce * Time.deltaTime);
+            _inBounds = false;
         }
-        else if (pos.x < screenSize.x/2 * -1)
+        
+        if (pos.x < screenSize.x/2 * -1)
         {
-            _tr.emitting = false;
-            transform.position = new Vector2(screenSize.x / 2, pos.y);
+            _edgeVelocity += Vector2.right * (_edgeForce * Time.deltaTime);
+            _inBounds = false;
         }
         
         if (pos.y > screenSize.y/2)
         {
-            _tr.emitting = false;
-            transform.position = new Vector2(pos.x, screenSize.y / 2 * -1);
+            _edgeVelocity += Vector2.down * (_edgeForce * Time.deltaTime);
+            _inBounds = false;
         }
-        else if (pos.y < screenSize.y/2 * -1)
+        
+        if (pos.y < screenSize.y/2 * -1)
         {
-            _tr.emitting = false;
-            transform.position = new Vector2(pos.x, screenSize.y / 2 );
+            _edgeVelocity += Vector2.up * (_edgeForce * Time.deltaTime);
+            _inBounds = false;
         }
         
     }
 
     private void FixedUpdate()
     {
-        _rb.velocity += _newVelocity * Time.deltaTime;
-        //_rb.velocity += (Vector2)transform.up * _speed;
-        transform.up = _rb.velocity.normalized;
+        _rb.velocity += _edgeVelocity + _newVelocity * Time.deltaTime;
+        Vector2 normVel = _rb.velocity.normalized;
+        transform.up = normVel;
 
-        if (_rb.velocity.sqrMagnitude < _speed)
+        if (_rb.velocity.sqrMagnitude < _speed*_speed)
         {
-            _rb.velocity += _speed * (Vector2)transform.up * Time.deltaTime;
+            //_rb.velocity += (Vector2)transform.up * (_speed * Time.deltaTime);
         }
         
+        if (_rb.velocity.sqrMagnitude > _speed*_speed)
+        {
+            _rb.velocity = normVel * (_maxSpeed * Time.deltaTime);
+        }
+
+        if (_inBounds)
+        {
+            _edgeVelocity *= .95f;
+        }
+
     }
 
     private void OnDrawGizmosSelected()
@@ -125,5 +131,20 @@ public class Boid2 : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, _minDistance);
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, _maxDistance);
+        
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(transform.position, _edgeVelocity);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawRay(transform.position, _newVelocity);
+
+    }
+
+    private void OnDrawGizmos()
+    {
+        /*Gizmos.color = Color.red;
+        Gizmos.DrawRay(transform.position, _edgeVelocity);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawRay(transform.position, _newVelocity);*/
+        
     }
 }

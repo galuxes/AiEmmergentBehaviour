@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -9,7 +10,7 @@ public class BoidManager2 : MonoBehaviour
     [SerializeField] private Vector2 _screenSize;
     [SerializeField] private int _numBoids;
     [SerializeField] private GameObject _boid;
-    private List<GameObject> _boids;
+    private List<GameObject> _boids = new List<GameObject>();
 
     private void Start()
     {
@@ -34,11 +35,11 @@ public class BoidManager2 : MonoBehaviour
     public List<GameObject> FindGameObjectsInRange(float radius, Vector3 boidLocation, GameObject requestingBoid)
     {
         List<GameObject> tempList = new List<GameObject>();
-        for(int i = 0; i < _boids.Count; i++)
+        foreach (var boid in _boids)
         {
-            if ((_boids[i] != requestingBoid ) && (math.abs((boidLocation - _boids[i].transform.position).magnitude) <= radius))
+            if ((boid != requestingBoid ) && ((boidLocation - boid.transform.position).sqrMagnitude <= radius*radius))
             {
-                tempList.Add(_boids[i]);
+                tempList.Add(boid);
             }
         }
 
