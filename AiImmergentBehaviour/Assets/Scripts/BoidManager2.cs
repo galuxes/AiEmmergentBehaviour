@@ -28,6 +28,7 @@ public class BoidManager2 : MonoBehaviour
             boid.GetComponent<Boid2>().screenSize = _screenSize;
             boid.GetComponent<Boid2>().bm = this;
             boid.GetComponent<Rigidbody2D>().velocity = boid.transform.up;
+            boid.GetComponent<TrailRenderer>().startColor = Random.ColorHSV();
             _boids.Add(boid);
         }
     }

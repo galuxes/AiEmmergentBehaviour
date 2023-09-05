@@ -31,28 +31,31 @@ public class Boid2 : MonoBehaviour
         StayInBounds();
     }
     
-    void ApplyRules()
+    private void ApplyRules()
     {
         PopulateLists();
         Vector2 cVector = _cActive ? Cohesion() : Vector2.zero;
         Vector2 sVector = _sActive ? Separation() : Vector2.zero;
+        Vector2 aVector = _aActive ? Alignment() : Vector2.zero;
 
-        CalculateVelocity(cVector, sVector);
+        CalculateVelocity(cVector, sVector, aVector);
     }
     
-    void PopulateLists()
+    private void PopulateLists()
     {
-        _withinMax = bm.FindGameObjectsInRange(_maxDistance, transform.position, gameObject);
-        _withinMin = bm.FindGameObjectsInRange(_minDistance, transform.position, gameObject);
+        Vector3 pos = transform.position;
+        _withinMax = bm.FindGameObjectsInRange(_maxDistance, pos, gameObject);
+        _withinMin = bm.FindGameObjectsInRange(_minDistance, pos, gameObject);
     }
 
-    Vector2 Cohesion()
+    private Vector2 Cohesion()
     {
         Vector3 centerMass = Vector3.zero;
         
         if (_withinMax.Count > 0)
         {
-            centerMass = _withinMax.Aggregate(centerMass, (current, obj) => current + obj.transform.position);
+            centerMass = _withinMax.Aggregate(centerMass, (current, boid) => current + boid.transform.position);
+            centerMass /= _withinMax.Count;
             Vector2 direction = centerMass - transform.position;
         
             return direction / _maxDistance;
@@ -61,17 +64,39 @@ public class Boid2 : MonoBehaviour
         return Vector2.zero;
     }
 
-    Vector2 Separation()
+    private Vector2 Separation()
     {
-        return Vector2.zero;
+        Vector3 seperationForce = Vector3.zero;
+        if (_withinMin.Count > 0)
+        {
+            seperationForce = _withinMin.Select(boid => transform.position - boid.transform.position).Aggregate(seperationForce, (current, vector) => current + vector / vector.sqrMagnitude);
+        }
+        
+        return seperationForce;
     }
 
-    void CalculateVelocity(Vector3 cohesion, Vector3 seperation)
+    private Vector2 Alignment()
     {
-        _newVelocity = cohesion * _cWeight + seperation * _sWeight;
+        Vector2 average = Vector2.zero;
+        if (_withinMin.Count > 0)
+        {
+            foreach (var boid in _withinMax)
+            {
+                average += boid.GetComponent<Rigidbody2D>().velocity;
+            }
+
+            average /= _withinMax.Count;
+        }
+
+        return average;
+    }
+
+    private void CalculateVelocity(Vector3 cohesion, Vector3 separation, Vector3 alignment)
+    {
+        _newVelocity = cohesion * _cWeight + separation * _sWeight + alignment * _aWeight;
     }
     
-    void StayInBounds()
+    private void StayInBounds()
     {
         var pos = transform.position;
         _inBounds = true;
@@ -104,14 +129,18 @@ public class Boid2 : MonoBehaviour
 
     private void FixedUpdate()
     {
+        Vector2 currVel = _rb.velocity;
+        
         _rb.velocity += _edgeVelocity + _newVelocity * Time.deltaTime;
-        Vector2 normVel = _rb.velocity.normalized;
+        
+        Vector2 normVel = currVel.normalized;
+        
         transform.up = normVel;
 
-        if (_rb.velocity.sqrMagnitude < _speed*_speed)
+        /*if (_rb.velocity.sqrMagnitude < _speed*_speed)
         {
             //_rb.velocity += (Vector2)transform.up * (_speed * Time.deltaTime);
-        }
+        }*/
         
         if (_rb.velocity.sqrMagnitude > _speed*_speed)
         {
