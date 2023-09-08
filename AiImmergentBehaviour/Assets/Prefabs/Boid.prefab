@@ -245,14 +245,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c86b29df86be5f4db3b6204ee230555, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _speed: 2
-  _maxSpeed: 4
-  _edgeForce: 10
+  _speed: 80
+  _maxSpeed: 90
+  _edgeForce: 8
   _minDistance: 0.15
   _maxDistance: 0.5
-  _cWeight: 7
-  _sWeight: 1
-  _aWeight: 4
+  _maxSepForce: 20
+  _cWeight: 15
+  _sWeight: 3
+  _aWeight: 35
   _cActive: 1
   _sActive: 1
   _aActive: 1

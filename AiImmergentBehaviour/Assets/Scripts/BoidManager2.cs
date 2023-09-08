@@ -10,7 +10,7 @@ public class BoidManager2 : MonoBehaviour
     [SerializeField] private Vector2 _screenSize;
     [SerializeField] private int _numBoids;
     [SerializeField] private GameObject _boid;
-    private List<GameObject> _boids = new List<GameObject>();
+    [SerializeField] private List<GameObject> _boids = new List<GameObject>();
 
     private void Start()
     {

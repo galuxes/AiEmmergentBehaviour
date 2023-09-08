@@ -10,7 +10,7 @@ public class Boid2 : MonoBehaviour
     [NonSerialized] public BoidManager2 bm;
     [SerializeField] private float _speed, _maxSpeed, _edgeForce;
     [NonSerialized] public Vector2 screenSize;
-    [SerializeField] private float _minDistance, _maxDistance;
+    [SerializeField] private float _minDistance, _maxDistance, _maxSepForce;
     private List<GameObject> _withinMin = new List<GameObject>(), _withinMax = new List<GameObject>();
 
     [SerializeField] private float _cWeight, _sWeight, _aWeight;
@@ -66,13 +66,18 @@ public class Boid2 : MonoBehaviour
 
     private Vector2 Separation()
     {
-        Vector3 seperationForce = Vector3.zero;
+        Vector3 separationForce = Vector3.zero;
         if (_withinMin.Count > 0)
         {
-            seperationForce = _withinMin.Select(boid => transform.position - boid.transform.position).Aggregate(seperationForce, (current, vector) => current + vector / vector.sqrMagnitude);
+            separationForce = _withinMin.Select(boid => transform.position - boid.transform.position).Aggregate(separationForce, (current, vector) => current + vector / vector.sqrMagnitude);
+        }
+
+        if (separationForce.sqrMagnitude > _maxSepForce*_maxSepForce)
+        {
+            separationForce = separationForce.normalized * _maxSepForce;
         }
         
-        return seperationForce;
+        return separationForce;
     }
 
     private Vector2 Alignment()
@@ -80,10 +85,7 @@ public class Boid2 : MonoBehaviour
         Vector2 average = Vector2.zero;
         if (_withinMin.Count > 0)
         {
-            foreach (var boid in _withinMax)
-            {
-                average += boid.GetComponent<Rigidbody2D>().velocity;
-            }
+            average = _withinMax.Aggregate(average, (current, boid) => current + boid.GetComponent<Rigidbody2D>().velocity);
 
             average /= _withinMax.Count;
         }
@@ -129,20 +131,20 @@ public class Boid2 : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Vector2 currVel = _rb.velocity;
-        
         _rb.velocity += _edgeVelocity + _newVelocity * Time.deltaTime;
+        
+        Vector2 currVel = _rb.velocity;
         
         Vector2 normVel = currVel.normalized;
         
         transform.up = normVel;
 
-        /*if (_rb.velocity.sqrMagnitude < _speed*_speed)
+        if (_rb.velocity.sqrMagnitude < _speed*_speed)
         {
-            //_rb.velocity += (Vector2)transform.up * (_speed * Time.deltaTime);
-        }*/
+            _rb.velocity = (Vector2)transform.up * (_speed * Time.deltaTime);
+        }
         
-        if (_rb.velocity.sqrMagnitude > _speed*_speed)
+        if (_rb.velocity.sqrMagnitude > _maxSpeed*_maxSpeed)
         {
             _rb.velocity = normVel * (_maxSpeed * Time.deltaTime);
         }
