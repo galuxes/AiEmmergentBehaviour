@@ -13,8 +13,8 @@ public class Boid2 : MonoBehaviour
     [SerializeField] private float _minDistance, _maxDistance, _maxSepForce;
     private List<GameObject> _withinMin = new List<GameObject>(), _withinMax = new List<GameObject>();
 
-    [SerializeField] private float _cWeight, _sWeight, _aWeight;
-    [SerializeField] private bool _cActive, _sActive, _aActive;
+    [SerializeField] public float _cWeight, _sWeight, _aWeight;
+    [SerializeField] public bool _cActive, _sActive, _aActive;
 
     [SerializeField] private Vector2 _newVelocity = Vector2.zero, _edgeVelocity = Vector2.zero;
 
@@ -152,6 +152,10 @@ public class Boid2 : MonoBehaviour
         if (_inBounds)
         {
             _edgeVelocity *= .95f;
+            if (_edgeVelocity.sqrMagnitude is > -0.4f and < 0.4f)
+            {
+                _edgeVelocity = Vector2.zero;
+            }
         }
 
     }
