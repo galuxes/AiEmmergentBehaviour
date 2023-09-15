@@ -7,11 +7,11 @@ using UnityEngine.InputSystem;
 
 public class Tile : MonoBehaviour
 {
-    [SerializeField] private bool _isAlive = false;
+    [SerializeField] private bool _isAlive = false, _willBeAlive;
     private SpriteRenderer _sr;
     private Mouse _mouse;
 
-    private List<Tile> _neighboorhood;
+    private int _numNeighbors;
         
     private void Start()
     {
@@ -27,5 +27,36 @@ public class Tile : MonoBehaviour
     private void OnMouseDown()
     {
         _isAlive = !_isAlive;
+    }
+
+    private void GetNumNeighbors()
+    {
+        
+    }
+
+    private void CalcNextState()
+    {
+        GetNumNeighbors();
+        _willBeAlive = false;
+        switch (_numNeighbors)
+        {
+            case 2:
+                if (_isAlive)
+                {
+                    _willBeAlive = true;
+                }
+                break;
+            case 3:
+                _willBeAlive = true;
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void Flip()
+    {
+        _isAlive = _willBeAlive;
+        CalcNextState();
     }
 }
