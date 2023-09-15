@@ -10,8 +10,8 @@ public class Tile : MonoBehaviour
     [SerializeField] private bool _isAlive = false, _willBeAlive;
     private SpriteRenderer _sr;
     private Mouse _mouse;
-
-    private int _numNeighbors;
+    public List<Tile> _neighborhood = new List<Tile>();
+    public Vector2Int tileLocation = Vector2Int.zero;
         
     private void Start()
     {
@@ -22,6 +22,7 @@ public class Tile : MonoBehaviour
     private void Update()
     {
         _sr.color = _isAlive ? Color.black : Color.white;
+        CalcNextState();
     }
 
     private void OnMouseDown()
@@ -29,16 +30,28 @@ public class Tile : MonoBehaviour
         _isAlive = !_isAlive;
     }
 
-    private void GetNumNeighbors()
+    public void AddToNeighborhood(Tile neighboringTile)
     {
-        
+        _neighborhood.Add(neighboringTile);
     }
 
-    private void CalcNextState()
+    private int GetNumNeighbors()
     {
-        GetNumNeighbors();
+        int numAlive = 0;
+        foreach (var tile in _neighborhood)
+        {
+            if (tile._isAlive)
+            {
+                numAlive++;
+            }
+        }
+        return numAlive;
+    }
+
+    public void CalcNextState()
+    {
         _willBeAlive = false;
-        switch (_numNeighbors)
+        switch (GetNumNeighbors())
         {
             case 2:
                 if (_isAlive)
@@ -57,6 +70,5 @@ public class Tile : MonoBehaviour
     public void Flip()
     {
         _isAlive = _willBeAlive;
-        CalcNextState();
     }
 }
