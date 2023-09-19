@@ -65,7 +65,7 @@ public class GridManager : MonoBehaviour
             {
                 for (int k = -1*_gridSize.y; k <= _gridSize.y; k += _gridSize.y)
                 {
-                    if (i + k + j > 0 && i + k + j < lastIndex && i + k + j != i)
+                    if (i + k + j >= 0 && i + k + j < lastIndex && i + k + j != i)
                     {
                         _grid[i].AddToNeighborhood(_grid[i + k + j]);
                     }
@@ -89,5 +89,10 @@ public class GridManager : MonoBehaviour
             }
             yield return new WaitForEndOfFrame();
         }
+    }
+
+    public void TogglePaused()
+    {
+        _isPaused = !_isPaused;
     }
 }
